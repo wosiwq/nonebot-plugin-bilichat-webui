@@ -1,7 +1,6 @@
 <div align="center">
-  <a href="https://v2.nonebot.dev/store"><img src="docs/nbp_logo.png" width="180" height="180" alt="NoneBotPluginLogo"></a>
+  <a href="https://v2.nonebot.dev/store"><img src="https://github.com/Well2333/nonebot-plugin-bilichat/blob/master/docs/nbp_logo.png?raw=true" width="180" height="180" alt="NoneBotPluginLogo"></a>
   <br>
-  <p><img src="docs/NoneBotPlugin.svg" width="240" alt="NoneBotPluginText"></p>
 </div>
 
 <div align="center">
