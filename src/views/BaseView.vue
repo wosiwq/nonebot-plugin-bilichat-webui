@@ -16,7 +16,7 @@
             placeholder="配置文件"></ElInput>
           <ElButton>保存提交</ElButton>
         </ElCol>
-        <ElCol :sm="12" v-if="bilichat">
+        <ElCol :sm="12">
           <span>可视化修改</span>
           <ElForm label-width="130px" :model="bilichat" v-if="bilichat">
             <ElFormItem label="全局订阅数量限制">
