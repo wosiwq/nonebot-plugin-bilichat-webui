@@ -19,7 +19,7 @@
             placeholder="等待读取数据中"></ElInput>
           <ElButton class="mt-2 mb-2" @click="saveChange">保存修改</ElButton>
         </ElCol>
-        <ElCol :sm="12">
+        <ElCol :sm="12" class="mt-2 sm:mt-0">
           <span>可视化修改</span>
           <ElForm
             label-width="130px"
@@ -50,7 +50,7 @@
               <ElSwitch v-model="bilichat.config.dynamic_grpc"></ElSwitch>
             </ElFormItem>
             <span>上传者列表</span>
-            <ElCollapse class="w-full mb-2 mt-2">
+            <ElCollapse class="w-full mb-5 mt-2">
               <ElForm v-for="(uploader, index) in bilichat.uploaders" :key="index">
                 <ElCollapseItem :title="uploader.nickname" class="w-full">
                   <ElFormItem label="UP的昵称">
