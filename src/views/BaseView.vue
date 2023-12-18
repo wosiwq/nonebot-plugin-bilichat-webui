@@ -49,7 +49,7 @@
             <ElFormItem label="是否启用gRPC">
               <ElSwitch v-model="bilichat.config.dynamic_grpc"></ElSwitch>
             </ElFormItem>
-            <span>订阅列表</span>
+            <span>上传者列表</span>
             <ElCollapse class="w-full mb-2 mt-2">
               <ElForm v-for="(uploader, index) in bilichat.uploaders" :key="index">
                 <ElCollapseItem :title="uploader.nickname" class="w-full">
@@ -75,7 +75,7 @@
                   <ElFormItem label="是否@所有人">
                     <ElSwitch v-model="user.at_all"></ElSwitch>
                   </ElFormItem>
-                  <ElFormItem label="订阅配置列表">
+                  <ElFormItem label="订阅配置">
                     <ElCollapse class="w-full">
                       <ElForm v-for="(subscription, index) in user.subscriptions" :key="index">
                         <ElCollapseItem :title="subscription.uid.toString()" class="w-full">
