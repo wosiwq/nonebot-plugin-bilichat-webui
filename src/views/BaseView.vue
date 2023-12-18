@@ -9,16 +9,21 @@
         <ElCol :sm="12">
           <span>配置文件</span>
           <ElInput
+            class="mt-2"
             @change="handleFormattedBilichatChange"
             v-model="formattedBilichat"
             :rows="20"
             type="textarea"
             placeholder="等待读取数据中"></ElInput>
-          <ElButton>保存提交</ElButton>
+          <ElButton class="mt-2 mb-2" @click="saveChange">保存修改</ElButton>
         </ElCol>
         <ElCol :sm="12">
           <span>可视化修改</span>
-          <ElForm label-width="130px" :model="bilichat" v-if="bilichat">
+          <ElForm
+            label-width="130px"
+            :model="bilichat"
+            v-if="bilichat"
+            @submit.prevent="saveChange">
             <ElFormItem label="全局订阅数量限制">
               <ElInputNumber
                 v-model="bilichat.config.subs_limit"
@@ -42,6 +47,7 @@
             <ElFormItem label="是否启用gRPC">
               <ElSwitch v-model="bilichat.config.dynamic_grpc"></ElSwitch>
             </ElFormItem>
+            <ElButton @click="saveChange">保存修改</ElButton>
           </ElForm>
           <span v-else>未读取到bilichat配置</span>
         </ElCol>
@@ -161,6 +167,29 @@ const handleDialogConfirm = () => {
     })
     .catch(() => {
       ElMessage.error('URL错误，请重新输入')
+      return
+    })
+    .finally(() => {
+      loading.close()
+    })
+}
+
+const saveChange = () => {
+  const loading = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+  axios
+    .put<BiliChat>(URL.value + '/subs_config', bilichat.value, { timeout: 5000 })
+    .then((res) => {
+      console.log(res.data)
+      bilichat.value = res.data
+      ElMessage.success('保存成功')
+    })
+    .catch((res) => {
+      ElMessage.error('未知错误')
+      console.log(res)
       return
     })
     .finally(() => {
