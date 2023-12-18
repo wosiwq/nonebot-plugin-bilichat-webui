@@ -1,15 +1,21 @@
 <template>
-  <ElContainer v-loading="isLoading">
-    <ElHeader class="flex items-center">
-      <ElButton class="ml-a" @click="isVisible = true" type="primary">更换url</ElButton>
-      <ElButton @click="null" type="primary">更新cookie</ElButton>
+  <ElContainer v-loading="isLoading" class="bg-gray-100 min-h-screen">
+    <ElHeader class="flex items-center justify-between bg-blue-700 text-white p-4">
+      <h1 class="text-lg font-bold">BILICHAT WEB UI</h1>
+      <div>
+        <ElButton
+          class="ml-2"
+          @click="isVisible = true"
+          color="rgb(59 130 246 / var(--un-bg-opacity))">
+          更换url
+        </ElButton>
+        <ElButton @click="null" color="rgb(59 130 246 / var(--un-bg-opacity))">更新cookie</ElButton>
+      </div>
     </ElHeader>
-    <ElMain>
-      <ElRow :gutter="20" class="">
-        <ElCol
-          :sm="12"
-          class="border-b-1 border-[#dcdfe6] border-0 border-solid sm:border-r-1 sm:border-b-0">
-          <span>配置文件</span>
+    <ElMain class="p-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        <div class="p-4 bg-white rounded-lg shadow">
+          <h2 class="text-lg font-bold mb-2">配置文件</h2>
           <ElInput
             class="mt-2"
             @change="handleFormattedBilichatChange"
@@ -18,9 +24,9 @@
             type="textarea"
             placeholder="等待读取数据中"></ElInput>
           <ElButton class="mt-2 mb-2" @click="saveChange">保存修改</ElButton>
-        </ElCol>
-        <ElCol :sm="12" class="mt-2 sm:mt-0">
-          <span>可视化修改</span>
+        </div>
+        <div class="p-4 bg-white rounded-lg shadow">
+          <h2 class="text-lg font-bold mb-2">可视化修改</h2>
           <ElForm
             label-width="130px"
             :model="bilichat"
@@ -49,7 +55,7 @@
             <ElFormItem label="是否启用gRPC">
               <ElSwitch v-model="bilichat.config.dynamic_grpc"></ElSwitch>
             </ElFormItem>
-            <span>上传者列表</span>
+            <h2 class="text-lg font-bold mb-2">上传者列表</h2>
             <ElCollapse class="w-full mb-5 mt-2">
               <ElForm v-for="(uploader, index) in bilichat.uploaders" :key="index">
                 <ElCollapseItem :title="uploader.nickname" class="w-full">
@@ -62,7 +68,7 @@
                 </ElCollapseItem>
               </ElForm>
             </ElCollapse>
-            <span>用户列表</span>
+            <h2 class="text-lg font-bold mb-2">用户列表</h2>
             <ElCollapse class="w-full mt-2">
               <ElForm v-for="(user, index) in bilichat.users" :key="index">
                 <ElCollapseItem :title="user.user_id.toString()" class="w-full">
@@ -104,8 +110,8 @@
             <ElButton class="mt-2" @click="saveChange">保存修改</ElButton>
           </ElForm>
           <span v-else>未读取到bilichat配置</span>
-        </ElCol>
-      </ElRow>
+        </div>
+      </div>
     </ElMain>
   </ElContainer>
   <ElDialog
