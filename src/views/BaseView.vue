@@ -2,7 +2,7 @@
   <ElContainer v-loading="isLoading">
     <ElHeader class="flex items-center">
       <ElButton class="ml-a" @click="isVisible = true" type="primary">更换url</ElButton>
-      <ElButton @click="isVisible = true" type="primary">更新cookie</ElButton>
+      <ElButton @click="null" type="primary">更新cookie</ElButton>
     </ElHeader>
     <ElMain>
       <ElRow :gutter="20" class="">
