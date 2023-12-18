@@ -5,8 +5,10 @@
       <ElButton @click="isVisible = true" type="primary">更新cookie</ElButton>
     </ElHeader>
     <ElMain>
-      <ElRow :gutter="20">
-        <ElCol :sm="12">
+      <ElRow :gutter="20" class="">
+        <ElCol
+          :sm="12"
+          class="border-b-1 border-[#dcdfe6] border-0 border-solid sm:border-r-1 sm:border-b-0">
           <span>配置文件</span>
           <ElInput
             class="mt-2"
@@ -47,7 +49,59 @@
             <ElFormItem label="是否启用gRPC">
               <ElSwitch v-model="bilichat.config.dynamic_grpc"></ElSwitch>
             </ElFormItem>
-            <ElButton @click="saveChange">保存修改</ElButton>
+            <span>订阅列表</span>
+            <ElCollapse class="w-full mb-2 mt-2">
+              <ElForm v-for="(uploader, index) in bilichat.uploaders" :key="index">
+                <ElCollapseItem :title="uploader.nickname" class="w-full">
+                  <ElFormItem label="UP的昵称">
+                    <ElInput v-model="uploader.nickname" placeholder="可能为空"></ElInput>
+                  </ElFormItem>
+                  <ElFormItem label="UP的B站UID">
+                    <ElInputNumber v-model="uploader.uid"></ElInputNumber>
+                  </ElFormItem>
+                </ElCollapseItem>
+              </ElForm>
+            </ElCollapse>
+            <span>用户列表</span>
+            <ElCollapse class="w-full mt-2">
+              <ElForm v-for="(user, index) in bilichat.users" :key="index">
+                <ElCollapseItem :title="user.user_id.toString()" class="w-full">
+                  <ElFormItem label="用户唯一标识符">
+                    <ElInput v-model="user.user_id"></ElInput>
+                  </ElFormItem>
+                  <ElFormItem label="用户平台">
+                    <ElInput v-model="user.platform" placeholder="例如 'QQ Group'"></ElInput>
+                  </ElFormItem>
+                  <ElFormItem label="是否@所有人">
+                    <ElSwitch v-model="user.at_all"></ElSwitch>
+                  </ElFormItem>
+                  <ElFormItem label="订阅配置列表">
+                    <ElCollapse class="w-full">
+                      <ElForm v-for="(subscription, index) in user.subscriptions" :key="index">
+                        <ElCollapseItem :title="subscription.uid.toString()" class="w-full">
+                          <ElFormItem label="UP的B站UID">
+                            <ElInputNumber v-model="subscription.uid"></ElInputNumber>
+                          </ElFormItem>
+                          <ElFormItem label="是否订阅动态">
+                            <ElSwitch v-model="subscription.dynamic"></ElSwitch>
+                          </ElFormItem>
+                          <ElFormItem label="动态是否@所有人">
+                            <ElSwitch v-model="subscription.dynamic_at_all"></ElSwitch>
+                          </ElFormItem>
+                          <ElFormItem label="是否订阅直播">
+                            <ElSwitch v-model="subscription.live"></ElSwitch>
+                          </ElFormItem>
+                          <ElFormItem label="直播是否@所有人">
+                            <ElSwitch v-model="subscription.live_at_all"></ElSwitch>
+                          </ElFormItem>
+                        </ElCollapseItem>
+                      </ElForm>
+                    </ElCollapse>
+                  </ElFormItem>
+                </ElCollapseItem>
+              </ElForm>
+            </ElCollapse>
+            <ElButton class="mt-2" @click="saveChange">保存修改</ElButton>
           </ElForm>
           <span v-else>未读取到bilichat配置</span>
         </ElCol>
