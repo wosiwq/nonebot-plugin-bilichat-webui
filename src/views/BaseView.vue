@@ -49,7 +49,6 @@
     </ElMain>
   </ElContainer>
   <ElDialog
-    v-loading.fullscreen.lock="false"
     v-model="isVisible"
     align-center
     :close-on-click-modal="false"
