@@ -1,5 +1,5 @@
 <template>
-  <ElContainer>
+  <ElContainer v-loading="isLoading">
     <ElHeader class="flex items-center">
       <ElButton class="ml-a" @click="isVisible = true" type="primary">更换url</ElButton>
       <ElButton @click="isVisible = true" type="primary">更新cookie</ElButton>
@@ -13,7 +13,7 @@
             v-model="formattedBilichat"
             :rows="20"
             type="textarea"
-            placeholder="配置文件"></ElInput>
+            placeholder="等待读取数据中"></ElInput>
           <ElButton>保存提交</ElButton>
         </ElCol>
         <ElCol :sm="12">
@@ -76,15 +76,22 @@ const URL = ref(localStorage.getItem('URL'))
 const isUrlEndWithSlash = computed(() => inputUrl.value?.endsWith('/'))
 const bilichat = ref<BiliChat>()
 const formattedBilichat = ref<string>()
+const isLoading = ref(false)
 
 watch(
   () => URL.value,
   (newVal) => {
     if (newVal) {
-      axios.get(newVal + '/subs_config').then((res) => {
-        bilichat.value = res.data
-        console.log(bilichat.value)
-      })
+      isLoading.value = true
+      axios
+        .get(newVal + '/subs_config')
+        .then((res) => {
+          bilichat.value = res.data
+          console.log(bilichat.value)
+        })
+        .finally(() => {
+          isLoading.value = false
+        })
     }
   }
 )
@@ -100,10 +107,16 @@ watch(
 
 onMounted(() => {
   if (URL.value) {
-    axios.get<BiliChat>(URL.value + '/subs_config').then((res) => {
-      bilichat.value = res.data
-      console.log(bilichat.value)
-    })
+    isLoading.value = true
+    axios
+      .get<BiliChat>(URL.value + '/subs_config')
+      .then((res) => {
+        bilichat.value = res.data
+        console.log(bilichat.value)
+      })
+      .finally(() => {
+        isLoading.value = false
+      })
   }
 })
 
