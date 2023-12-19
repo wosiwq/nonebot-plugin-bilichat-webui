@@ -23,8 +23,9 @@
           <ElButton class="mt-2 mb-2" @click="saveChange">保存修改</ElButton>
         </div>
 
-        <div class="p-2 bg-white rounded-lg shadow">
-          <ElScrollbar style="height: calc(100vh - 120px)">
+        <div ref="formDiv" class="p-2 bg-white rounded-lg shadow">
+          <!-- 这里改成动态计算scrollbar高度 -->
+          <ElScrollbar>
             <h2 class="text-lg font-bold mt-2 mb-2">可视化修改</h2>
             <ElForm
               label-width="8rem"
@@ -72,7 +73,7 @@
                         <span class="font-bold text-[1rem] mb-2">订阅配置</span>
                         <ElPopover
                           title="请输入UP的UID"
-                          :visible="isPopoverVisible"
+                          trigger="click"
                           width="200"
                           placement="top-end">
                           <template #reference>
@@ -81,12 +82,10 @@
                               size="small"
                               :icon="Plus"
                               type="success"
-                              circle
-                              @click="isPopoverVisible = true"></ElButton>
+                              circle></ElButton>
                           </template>
                           <ElInput type="number" v-model="inputUid"></ElInput>
-                          <div class="flex justify-between mt-2">
-                            <ElButton size="small" @click="isPopoverVisible = false">取消</ElButton>
+                          <div class="flex justify-end mt-2">
                             <ElButton
                               size="small"
                               type="primary"
@@ -173,8 +172,10 @@ const isVisible = ref(!isNotFirst.value)
 const isPopoverVisible = ref(false)
 const isLoading = ref(false)
 
+const formDiv: Ref<HTMLElement | undefined> = ref()
 const inputUrl = ref('')
 const inputUid = ref<number>()
+const getHeight = ref('100%')
 
 const URL = ref(localStorage.getItem('URL'))
 const isUrlEndWithSlash = computed(() => inputUrl.value?.endsWith('/'))
@@ -208,7 +209,6 @@ watch(
   },
   { deep: true }
 )
-
 onMounted(() => {
   if (URL.value) {
     isLoading.value = true
@@ -315,9 +315,9 @@ const handleAddSubs = (subscriptions: BiliChatUserSubscriptions[]) => {
   }
   const newSubs: BiliChatUserSubscriptions = {
     uid: inputUid.value,
-    dynamic: false,
+    dynamic: true,
     dynamic_at_all: false,
-    live: false,
+    live: true,
     live_at_all: false
   }
   subscriptions.push(newSubs)
