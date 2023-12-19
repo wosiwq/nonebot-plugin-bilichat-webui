@@ -179,7 +179,12 @@
     </ElTable>
     <ElButton @click="handelAddCookie" type="success">新增cookie</ElButton>
   </ElDialog>
-  <ElDialog title="扫码登录" align-center append-to-body v-model="isQrcodeDialogVisible">
+  <ElDialog
+    @close="handelQrcodeDialogClose"
+    title="扫码登录"
+    align-center
+    append-to-body
+    v-model="isQrcodeDialogVisible">
     <div class="flex justify-center">
       <QrcodeVue :value="qrcodeUrl" :size="300"></QrcodeVue>
     </div>
@@ -208,6 +213,7 @@ const authCode = ref()
 const URL = ref(localStorage.getItem('URL'))
 const isUrlEndWithSlash = computed(() => inputUrl.value?.endsWith('/'))
 
+const timer = ref()
 const bilichat = ref<BiliChat>()
 const formattedBilichat = ref<string>()
 const authInfo = ref<AuthInfo[]>()
@@ -397,7 +403,7 @@ const handelAddCookie = () => {
       return
     }
     // 添加一个定时器 调用一个接口 用来查询是否登录成功
-    const timer = setInterval(() => {
+    timer.value = setInterval(() => {
       console.log('timer')
 
       axios
@@ -408,7 +414,8 @@ const handelAddCookie = () => {
         )
         .then((res) => {
           if (res.data.code === 86038) {
-            clearInterval(timer)
+            clearInterval(timer.value)
+            timer.value = undefined
             ElMessage.warning('二维码已失效，请重新扫码')
             handelAddCookie()
             return
@@ -423,7 +430,8 @@ const handelAddCookie = () => {
             return
           }
           if (res.data.code === 0) {
-            clearInterval(timer)
+            clearInterval(timer.value)
+            timer.value = undefined
             isQrcodeDialogVisible.value = false
             ElMessage.success('登录成功')
             handleManageCookie()
@@ -431,6 +439,10 @@ const handelAddCookie = () => {
         })
     }, 1000)
   })
+}
+const handelQrcodeDialogClose = () => {
+  clearInterval(timer.value)
+  timer.value = undefined
 }
 </script>
 <style scoped lang="scss"></style>
