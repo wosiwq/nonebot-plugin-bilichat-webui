@@ -3,10 +3,14 @@
     <ElHeader class="flex items-center justify-between bg-blue-700 text-white p-4">
       <span class="font-bold sm:text-lg">BILICHAT WEB UI</span>
       <div>
-        <ElButton @click="isVisible = true" color="rgb(59 130 246 / var(--un-bg-opacity))">
+        <ElButton
+          @click="isChangeUrlDialogVisible = true"
+          color="rgb(59 130 246 / var(--un-bg-opacity))">
           更换url
         </ElButton>
-        <ElButton @click="null" color="rgb(59 130 246 / var(--un-bg-opacity))">更新cookie</ElButton>
+        <ElButton @click="handleManageCookie" color="rgb(59 130 246 / var(--un-bg-opacity))">
+          更新cookie
+        </ElButton>
       </div>
     </ElHeader>
     <ElMain class="h-full">
@@ -24,7 +28,6 @@
         </div>
 
         <div ref="formDiv" class="p-2 bg-white rounded-lg shadow">
-          <!-- 这里改成动态计算scrollbar高度 -->
           <ElScrollbar>
             <h2 class="text-lg font-bold mt-2 mb-2">可视化修改</h2>
             <ElForm
@@ -145,7 +148,7 @@
     </ElMain>
   </ElContainer>
   <ElDialog
-    v-model="isVisible"
+    v-model="isChangeUrlDialogVisible"
     align-center
     :close-on-click-modal="false"
     :close-on-press-escape="false"
@@ -160,28 +163,54 @@
       <ElFormItem><ElButton @click="handleDialogConfirm">确定</ElButton></ElFormItem>
     </ElForm>
   </ElDialog>
+  <ElDialog v-model="isManageCookieDialogVisible">
+    <template #header>
+      {{ '管理cookie' }}
+    </template>
+    <ElTable stripe height="400px" :data="authInfo" class="w-full">
+      <ElTableColumn label="平台" prop="id"></ElTableColumn>
+      <ElTableColumn label="token过期时间" prop="token_expired"></ElTableColumn>
+      <ElTableColumn label="Cookie过期时间" prop="cookie_expired"></ElTableColumn>
+      <ElTableColumn fixed="right" label="操作" width="120">
+        <template #default="{ row }">
+          <ElButton link type="danger" size="small" @click="handelDelCookie(row)">删除</ElButton>
+        </template>
+      </ElTableColumn>
+    </ElTable>
+    <ElButton @click="handelAddCookie" type="success">新增cookie</ElButton>
+  </ElDialog>
+  <ElDialog title="扫码登录" align-center append-to-body v-model="isQrcodeDialogVisible">
+    <div class="flex justify-center">
+      <QrcodeVue :value="qrcodeUrl" :size="300"></QrcodeVue>
+    </div>
+  </ElDialog>
 </template>
 <script lang="ts" setup>
 import Minus from '@/assets/Minus.vue'
 import Plus from '@/assets/Plus.vue'
-import type { BiliChat, BiliChatUserSubscriptions, BiliResponse } from '@/types'
+import type { AuthInfo, BiliChat, BiliChatUserSubscriptions, BiliResponse, Qrcode } from '@/types'
 import axios from 'axios'
+import QrcodeVue from 'qrcode.vue'
 
 const isNotFirst = ref(Boolean(localStorage.getItem('isNotFirst')))
-const isVisible = ref(!isNotFirst.value)
+const isChangeUrlDialogVisible = ref(!isNotFirst.value)
+const isManageCookieDialogVisible = ref(false)
+const isQrcodeDialogVisible = ref(false)
 const isPopoverVisible = ref(false)
 const isLoading = ref(false)
 
 const formDiv: Ref<HTMLElement | undefined> = ref()
 const inputUrl = ref('')
 const inputUid = ref<number>()
-const getHeight = ref('100%')
+const qrcodeUrl = ref()
+const authCode = ref()
 
 const URL = ref(localStorage.getItem('URL'))
 const isUrlEndWithSlash = computed(() => inputUrl.value?.endsWith('/'))
 
 const bilichat = ref<BiliChat>()
 const formattedBilichat = ref<string>()
+const authInfo = ref<AuthInfo[]>()
 
 watch(
   () => URL.value,
@@ -267,7 +296,7 @@ const handleDialogConfirm = () => {
       localStorage.setItem('URL', inputUrl.value)
       URL.value = inputUrl.value
       ElMessage.success('您的URL更新为：' + inputUrl.value)
-      isVisible.value = false
+      isChangeUrlDialogVisible.value = false
       inputUrl.value = ''
       if (!isNotFirst.value) {
         localStorage.setItem('isNotFirst', 'true')
@@ -330,6 +359,78 @@ const handleDelSubs = (subscriptions: BiliChatUserSubscriptions[], index: number
     return
   }
   subscriptions.splice(index, 1)
+}
+const handleManageCookie = () => {
+  axios.get<BiliResponse<AuthInfo[]>>(URL.value + '/bili_grpc_auth').then((res) => {
+    if (res.data.code !== 0) {
+      ElMessage.error('未知错误')
+      console.log(res)
+      return
+    }
+    authInfo.value = res.data.data
+    isManageCookieDialogVisible.value = true
+  })
+}
+const handelDelCookie = (uid: number) => {
+  console.log(uid)
+
+  // axios
+  //   .delete<BiliResponse<AuthInfo[]>>(URL.value + '/bili_grpc_auth', { data: { uid } })
+  //   .then((res) => {
+  //     if (res.data.code !== 0) {
+  //       ElMessage.error('未知错误')
+  //       console.log(res)
+  //       return
+  //     }
+  //     authInfo.value = res.data.data
+  //   })
+}
+const handelAddCookie = () => {
+  axios.get<BiliResponse<Qrcode>>(URL.value + '/bili_grpc_login/qrcode').then((res) => {
+    console.log(res.data.data)
+    qrcodeUrl.value = res.data.data.qrcode_url
+    authCode.value = res.data.data.auth_code
+    isQrcodeDialogVisible.value = true
+    if (res.data.code !== 0) {
+      ElMessage.error('未知错误')
+      console.log(res)
+      return
+    }
+    // 添加一个定时器 调用一个接口 用来查询是否登录成功
+    const timer = setInterval(() => {
+      console.log('timer')
+
+      axios
+        .post<BiliResponse<AuthInfo>>(
+          URL.value + '/bili_grpc_login/qrcode',
+          {},
+          { params: { auth_code: authCode.value } }
+        )
+        .then((res) => {
+          if (res.data.code === 86038) {
+            clearInterval(timer)
+            ElMessage.warning('二维码已失效，请重新扫码')
+            handelAddCookie()
+            return
+          }
+          if (res.data.code === 86909) {
+            ElMessage.success('扫码成功，请在手机上确认登录')
+            return
+          }
+          if (res.data.code !== 86039 && res.data.code !== 0) {
+            ElMessage.error('未知错误')
+            console.log(res)
+            return
+          }
+          if (res.data.code === 0) {
+            clearInterval(timer)
+            isQrcodeDialogVisible.value = false
+            ElMessage.success('登录成功')
+            handleManageCookie()
+          }
+        })
+    }, 1000)
+  })
 }
 </script>
 <style scoped lang="scss"></style>

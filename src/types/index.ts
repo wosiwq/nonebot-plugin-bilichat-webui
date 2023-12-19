@@ -35,3 +35,14 @@ export interface BiliResponse<T = any> {
   message: string
   data: T
 }
+
+export interface AuthInfo {
+  id: number
+  token_expired: number
+  cookie_expired: number
+}
+
+export interface Qrcode {
+  qrcode_url: string
+  auth_code: string
+}
