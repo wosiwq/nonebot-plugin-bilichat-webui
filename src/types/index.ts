@@ -30,10 +30,8 @@ export interface BiliChatUserSubscriptions {
   uid: number
 }
 
-export default {
-  BiliChat,
-  BiliChatConfig,
-  BiliChatUploaders,
-  BiliChatUsers,
-  BiliChatUserSubscriptions
+export interface BiliResponse<T = any> {
+  code: number
+  message: string
+  data: T
 }
