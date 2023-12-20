@@ -170,7 +170,7 @@
       </div>
     </ElMain>
   </ElContainer>
-  <ElDialog v-model="isManageCookieDialogVisible">
+  <ElDialog style="min-width: 400px" v-model="isManageCookieDialogVisible">
     <template #header>
       {{ '管理cookie' }}
     </template>
@@ -182,7 +182,7 @@
       <ElTableColumn label="Cookie过期时间">
         <template #default="{ row }">{{ coverDataToLocalString(row.cookie_expired) }}</template>
       </ElTableColumn>
-      <ElTableColumn fixed="right" label="操作" width="120">
+      <ElTableColumn fixed="right" label="操作" width="60">
         <template #default="{ row }">
           <ElPopover trigger="click" placement="left" width="200">
             <p class="break-normal">
@@ -203,16 +203,17 @@
       </ElTableColumn>
     </ElTable>
     <ElButton @click="handelAddCookie" type="success">新增/刷新cookie</ElButton>
-  </ElDialog>
-  <ElDialog
-    @close="handelQrcodeDialogClose"
-    title="扫码登录"
-    align-center
-    append-to-body
-    v-model="isQrcodeDialogVisible">
-    <div class="flex justify-center">
-      <QrcodeVue :value="qrcodeUrl" :size="300"></QrcodeVue>
-    </div>
+    <ElDialog
+      style="min-width: 400px"
+      @close="handelQrcodeDialogClose"
+      title="扫码登录"
+      align-center
+      append-to-body
+      v-model="isQrcodeDialogVisible">
+      <div class="flex justify-center">
+        <QrcodeVue :value="qrcodeUrl" :size="300"></QrcodeVue>
+      </div>
+    </ElDialog>
   </ElDialog>
 </template>
 <script lang="ts" setup>
