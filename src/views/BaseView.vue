@@ -9,7 +9,7 @@
           更换url
         </ElButton>
         <ElButton @click="handleManageCookie" color="rgb(59 130 246 / var(--un-bg-opacity))">
-          更新cookie
+          管理cookie
         </ElButton>
       </div>
     </ElHeader>
@@ -168,16 +168,34 @@
       {{ '管理cookie' }}
     </template>
     <ElTable stripe height="400px" :data="authInfo" class="w-full">
-      <ElTableColumn label="平台" prop="id"></ElTableColumn>
-      <ElTableColumn label="token过期时间" prop="token_expired"></ElTableColumn>
-      <ElTableColumn label="Cookie过期时间" prop="cookie_expired"></ElTableColumn>
+      <ElTableColumn label="B站UID" prop="id"></ElTableColumn>
+      <ElTableColumn label="token过期时间">
+        <template #default="{ row }">{{ coverDataToLocalString(row.token_expired) }}</template>
+      </ElTableColumn>
+      <ElTableColumn label="Cookie过期时间">
+        <template #default="{ row }">{{ coverDataToLocalString(row.cookie_expired) }}</template>
+      </ElTableColumn>
       <ElTableColumn fixed="right" label="操作" width="120">
         <template #default="{ row }">
-          <ElButton link type="danger" size="small" @click="handelDelCookie(row)">删除</ElButton>
+          <ElPopover trigger="click" placement="left" width="200">
+            <p class="break-normal">
+              确定要删除
+              <b>{{ row.id }}</b>
+              的cookie吗
+            </p>
+            <div style="text-align: right; margin: 0">
+              <el-button size="small" type="danger" @click="handelDelCookie(row.id)">
+                确认
+              </el-button>
+            </div>
+            <template #reference>
+              <ElButton link type="danger" size="small">删除</ElButton>
+            </template>
+          </ElPopover>
         </template>
       </ElTableColumn>
     </ElTable>
-    <ElButton @click="handelAddCookie" type="success">新增cookie</ElButton>
+    <ElButton @click="handelAddCookie" type="success">新增/刷新cookie</ElButton>
   </ElDialog>
   <ElDialog
     @close="handelQrcodeDialogClose"
@@ -321,18 +339,20 @@ const saveChange = () => {
     background: 'rgba(0, 0, 0, 0.7)'
   })
   axios
-    .put<BiliResponse<BiliChat>>(URL.value + '/subs_config', bilichat.value, { timeout: 5000 })
+    .put<BiliResponse<BiliChat>>(URL.value + '/subs_config', bilichat.value, { timeout: 10000 })
     .then((res) => {
       if (res.data.code !== 0) {
         ElMessage.error('未知错误')
         console.log(res)
         return
       }
-      console.log(res.data)
       bilichat.value = res.data.data
       ElMessage.success('保存成功')
     })
-
+    .catch((e) => {
+      ElMessage.error('保存失败')
+      console.log(e)
+    })
     .finally(() => {
       loading.close()
     })
@@ -379,17 +399,17 @@ const handleManageCookie = () => {
 }
 const handelDelCookie = (uid: number) => {
   console.log(uid)
-
-  // axios
-  //   .delete<BiliResponse<AuthInfo[]>>(URL.value + '/bili_grpc_auth', { data: { uid } })
-  //   .then((res) => {
-  //     if (res.data.code !== 0) {
-  //       ElMessage.error('未知错误')
-  //       console.log(res)
-  //       return
-  //     }
-  //     authInfo.value = res.data.data
-  //   })
+  axios
+    .delete<BiliResponse<AuthInfo[]>>(URL.value + '/bili_grpc_auth', { params: { uid } })
+    .then((res) => {
+      if (res.data.code !== 0) {
+        ElMessage.error('未知错误')
+        console.log(res)
+        return
+      }
+      ElMessage.success('删除成功')
+      handleManageCookie()
+    })
 }
 const handelAddCookie = () => {
   axios.get<BiliResponse<Qrcode>>(URL.value + '/bili_grpc_login/qrcode').then((res) => {
@@ -404,8 +424,6 @@ const handelAddCookie = () => {
     }
     // 添加一个定时器 调用一个接口 用来查询是否登录成功
     timer.value = setInterval(() => {
-      console.log('timer')
-
       axios
         .post<BiliResponse<AuthInfo>>(
           URL.value + '/bili_grpc_login/qrcode',
@@ -418,10 +436,6 @@ const handelAddCookie = () => {
             timer.value = undefined
             ElMessage.warning('二维码已失效，请重新扫码')
             handelAddCookie()
-            return
-          }
-          if (res.data.code === 86909) {
-            ElMessage.success('扫码成功，请在手机上确认登录')
             return
           }
           if (res.data.code !== 86039 && res.data.code !== 0) {
@@ -443,6 +457,18 @@ const handelAddCookie = () => {
 const handelQrcodeDialogClose = () => {
   clearInterval(timer.value)
   timer.value = undefined
+}
+const coverDataToLocalString = (ts: number) => {
+  let date = new Date(ts * 1000)
+  return date.toLocaleString(undefined, {
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
 }
 </script>
 <style scoped lang="scss"></style>

@@ -1,12 +1,13 @@
 <template>
   <ElConfigProvider :locale="locale">
-    <RouterView />
+    <BaseView />
   </ElConfigProvider>
 </template>
 
 <script setup lang="ts">
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs';
-import { ref } from 'vue';
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import { ref } from 'vue'
+import BaseView from './views/BaseView.vue'
 const locale = ref(zhCn)
 </script>
 
