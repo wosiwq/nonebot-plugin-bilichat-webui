@@ -94,7 +94,7 @@
                     <ElFormItem label="是否@所有人">
                       <ElSwitch v-model="user.at_all"></ElSwitch>
                     </ElFormItem>
-                    <div class="ml-4">
+                    <div class="ml-4 mr-4">
                       <div class="flex justify-between items-center">
                         <span class="font-bold text-[1rem] mb-2">订阅配置</span>
                         <ElPopover
