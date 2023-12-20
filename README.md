@@ -28,15 +28,17 @@ _✨ 多功能的 B 站视频解析工具的webui ✨_
 
 ## 📖 介绍
 
-待补全
+nonebot-plugin-bilichat-webui 是 nonebot-plugin-bilichat 配套的 WEB UI, 使用 vue3, element-plus, qrcode.vue 与 axios 开发。
 
-## 💿 安装
+## 💿 开发环境部署
 
-待补全
+1. 运行 `npm install` 安装开发环境依赖
+2. 运行 `npx vite` 启动开发环境
+3. (可选) 根据自己的需求修改 `vite.config.ts` 内的配置，如：`defineConfig` 内的 `server.proxy` 的 `target`。此处的 `target` 对应本地启动的 `nonebot-plugin-bilichat`的 api 地址，若未自定义 `bilichat_api_path` 则按照默认配置启动即可自动链接到 `nonebot-plugin-bilichat`
 
 ## 🎉 使用
 
-待补全
+WEB UI 将内置在 nonebot-plugin-bilichat 中，参考命令行内的提示即可正常使用
 
 ## ⏳ Star 趋势
 
