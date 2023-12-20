@@ -46,3 +46,8 @@ export interface Qrcode {
   qrcode_url: string
   auth_code: string
 }
+
+export interface PlatformOption {
+  label: string
+  value: string
+}

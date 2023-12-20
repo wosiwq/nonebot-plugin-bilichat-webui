@@ -58,15 +58,43 @@
               <ElFormItem label="是否启用gRPC">
                 <ElSwitch v-model="bilichat.config.dynamic_grpc"></ElSwitch>
               </ElFormItem>
-              <h2 class="text-lg font-bold mb-2">用户列表</h2>
-              <ElCollapse class="w-full mt-2">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold mb-2">用户列表</h2>
+                <ElButton
+                  class="mr-4"
+                  size="small"
+                  :icon="Plus"
+                  type="success"
+                  circle
+                  @click="handleAddUser"></ElButton>
+              </div>
+              <ElCollapse accordion class="w-full mt-2">
                 <ElForm v-for="(user, index) in bilichat.users" :key="index" label-width="7rem">
-                  <ElCollapseItem :title="user.user_id.toString()" class="w-full">
+                  <ElCollapseItem class="w-full" :name="'user-' + index">
+                    <template #title>
+                      <div class="flex w-full items-center justify-between">
+                        <span>
+                          {{ user.user_id }}
+                        </span>
+                        <ElButton
+                          size="small"
+                          :icon="Minus"
+                          type="danger"
+                          circle
+                          @click.stop="handleDelUser(bilichat.users, index)"></ElButton>
+                      </div>
+                    </template>
                     <ElFormItem label="用户唯一标识符">
                       <ElInput v-model="user.user_id"></ElInput>
                     </ElFormItem>
                     <ElFormItem label="用户平台">
-                      <ElInput v-model="user.platform" placeholder="例如 'QQ Group'"></ElInput>
+                      <ElSelect v-model="user.platform" placeholder="例如 'QQ Group'">
+                        <ElOption
+                          v-for="(option, index) in platformOption"
+                          :key="index"
+                          :label="option.label"
+                          :value="option.value"></ElOption>
+                      </ElSelect>
                     </ElFormItem>
                     <ElFormItem label="是否@所有人">
                       <ElSwitch v-model="user.at_all"></ElSwitch>
@@ -211,7 +239,15 @@
 <script lang="ts" setup>
 import Minus from '@/assets/Minus.vue'
 import Plus from '@/assets/Plus.vue'
-import type { AuthInfo, BiliChat, BiliChatUserSubscriptions, BiliResponse, Qrcode } from '@/types'
+import type {
+  AuthInfo,
+  BiliChat,
+  BiliChatUserSubscriptions,
+  BiliChatUsers,
+  BiliResponse,
+  PlatformOption,
+  Qrcode
+} from '@/types'
 import axios from 'axios'
 import QrcodeVue from 'qrcode.vue'
 
@@ -235,6 +271,8 @@ const timer = ref()
 const bilichat = ref<BiliChat>()
 const formattedBilichat = ref<string>()
 const authInfo = ref<AuthInfo[]>()
+
+const platformOption = ref<PlatformOption[]>()
 
 watch(
   () => URL.value,
@@ -273,10 +311,20 @@ onMounted(() => {
           console.log(res)
           return
         }
-        console.log(res.data)
-
         bilichat.value = res.data.data
-        console.log(bilichat.value)
+        return axios.get<BiliResponse<PlatformOption[]>>(URL.value + '/subs_config/platform')
+      })
+      .then((res) => {
+        if (res!.data.code !== 0) {
+          ElMessage.error('未知错误')
+          console.log(res)
+          return
+        }
+        platformOption.value = res!.data.data
+      })
+      .catch((e) => {
+        ElMessage.error('未知错误')
+        console.log(e)
       })
       .finally(() => {
         isLoading.value = false
@@ -379,12 +427,24 @@ const handleAddSubs = (subscriptions: BiliChatUserSubscriptions[]) => {
   isPopoverVisible.value = false
   inputUid.value = undefined
 }
+const handleAddUser = () => {
+  const newUser: BiliChatUsers = {
+    user_id: '',
+    platform: 'QQ Group',
+    at_all: false,
+    subscriptions: []
+  }
+  bilichat.value?.users.push(newUser)
+}
 const handleDelSubs = (subscriptions: BiliChatUserSubscriptions[], index: number) => {
   if (subscriptions.length <= 1) {
     ElMessage.error('订阅列表不能为空')
     return
   }
   subscriptions.splice(index, 1)
+}
+const handleDelUser = (users: BiliChatUsers[], index: number) => {
+  users.splice(index, 1)
 }
 const handleManageCookie = () => {
   axios.get<BiliResponse<AuthInfo[]>>(URL.value + '/bili_grpc_auth').then((res) => {
