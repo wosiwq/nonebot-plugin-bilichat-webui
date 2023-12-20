@@ -3,11 +3,6 @@
     <ElHeader class="flex items-center justify-between bg-blue-700 text-white p-4">
       <span class="font-bold sm:text-lg">BILICHAT WEB UI</span>
       <div>
-        <ElButton
-          @click="isChangeUrlDialogVisible = true"
-          color="rgb(59 130 246 / var(--un-bg-opacity))">
-          更换url
-        </ElButton>
         <ElButton @click="handleManageCookie" color="rgb(59 130 246 / var(--un-bg-opacity))">
           管理cookie
         </ElButton>
@@ -175,22 +170,6 @@
       </div>
     </ElMain>
   </ElContainer>
-  <ElDialog
-    v-model="isChangeUrlDialogVisible"
-    align-center
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    :show-close="isNotFirst">
-    <template #header>
-      {{ isNotFirst ? '更换URL' : '你似乎是第一次使用BILICHAT WEB UI，请输入你的URL' }}
-    </template>
-    <ElForm @submit.prevent="handleDialogConfirm">
-      <ElFormItem label="URL:">
-        <ElInput v-model="inputUrl" placeholder="在这里输入你的URL"></ElInput>
-      </ElFormItem>
-      <ElFormItem><ElButton @click="handleDialogConfirm">确定</ElButton></ElFormItem>
-    </ElForm>
-  </ElDialog>
   <ElDialog v-model="isManageCookieDialogVisible">
     <template #header>
       {{ '管理cookie' }}
@@ -251,21 +230,15 @@ import type {
 import axios from 'axios'
 import QrcodeVue from 'qrcode.vue'
 
-const isNotFirst = ref(Boolean(localStorage.getItem('isNotFirst')))
-const isChangeUrlDialogVisible = ref(!isNotFirst.value)
 const isManageCookieDialogVisible = ref(false)
 const isQrcodeDialogVisible = ref(false)
 const isPopoverVisible = ref(false)
 const isLoading = ref(false)
 
 const formDiv: Ref<HTMLElement | undefined> = ref()
-const inputUrl = ref('')
 const inputUid = ref<number>()
 const qrcodeUrl = ref()
 const authCode = ref()
-
-const URL = ref(localStorage.getItem('URL'))
-const isUrlEndWithSlash = computed(() => inputUrl.value?.endsWith('/'))
 
 const timer = ref()
 const bilichat = ref<BiliChat>()
@@ -274,23 +247,6 @@ const authInfo = ref<AuthInfo[]>()
 
 const platformOption = ref<PlatformOption[]>()
 
-watch(
-  () => URL.value,
-  (newVal) => {
-    if (newVal) {
-      isLoading.value = true
-      axios
-        .get(newVal + '/subs_config')
-        .then((res) => {
-          bilichat.value = res.data
-          console.log(bilichat.value)
-        })
-        .finally(() => {
-          isLoading.value = false
-        })
-    }
-  }
-)
 watch(
   () => bilichat.value,
   (newVal) => {
@@ -301,35 +257,33 @@ watch(
   { deep: true }
 )
 onMounted(() => {
-  if (URL.value) {
-    isLoading.value = true
-    axios
-      .get<BiliResponse<BiliChat>>(URL.value + '/subs_config')
-      .then((res) => {
-        if (res.data.code !== 0) {
-          ElMessage.error('未知错误')
-          console.log(res)
-          return
-        }
-        bilichat.value = res.data.data
-        return axios.get<BiliResponse<PlatformOption[]>>(URL.value + '/subs_config/platform')
-      })
-      .then((res) => {
-        if (res!.data.code !== 0) {
-          ElMessage.error('未知错误')
-          console.log(res)
-          return
-        }
-        platformOption.value = res!.data.data
-      })
-      .catch((e) => {
+  isLoading.value = true
+  axios
+    .get<BiliResponse<BiliChat>>('api/subs_config')
+    .then((res) => {
+      if (res.data.code !== 0) {
         ElMessage.error('未知错误')
-        console.log(e)
-      })
-      .finally(() => {
-        isLoading.value = false
-      })
-  }
+        console.log(res)
+        return
+      }
+      bilichat.value = res.data.data
+      return axios.get<BiliResponse<PlatformOption[]>>('api/subs_config/platform')
+    })
+    .then((res) => {
+      if (res!.data.code !== 0) {
+        ElMessage.error('未知错误')
+        console.log(res)
+        return
+      }
+      platformOption.value = res!.data.data
+    })
+    .catch((e) => {
+      ElMessage.error('未知错误')
+      console.log(e)
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
 })
 
 const handleFormattedBilichatChange = (val: string) => {
@@ -341,45 +295,6 @@ const handleFormattedBilichatChange = (val: string) => {
   }
 }
 
-const handleDialogConfirm = () => {
-  if (!inputUrl.value) {
-    ElMessage.error('URL不能为空')
-    return
-  }
-  inputUrl.value = inputUrl.value.trim()
-  if (isUrlEndWithSlash.value) {
-    inputUrl.value = inputUrl.value.slice(0, -1)
-    console.log(inputUrl.value)
-  }
-  const loading = ElLoading.service({
-    lock: true,
-    text: 'Loading',
-    background: 'rgba(0, 0, 0, 0.7)'
-  })
-  axios
-    .get<BiliResponse<BiliChat>>(inputUrl.value + '/subs_config', { timeout: 5000 })
-    .then((res) => {
-      if (res.data.code !== 0) {
-        ElMessage.error('URL错误，请重新输入')
-        return
-      }
-      bilichat.value = res.data.data
-      console.log(bilichat.value)
-      localStorage.setItem('URL', inputUrl.value)
-      URL.value = inputUrl.value
-      ElMessage.success('您的URL更新为：' + inputUrl.value)
-      isChangeUrlDialogVisible.value = false
-      inputUrl.value = ''
-      if (!isNotFirst.value) {
-        localStorage.setItem('isNotFirst', 'true')
-        isNotFirst.value = true
-      }
-    })
-    .finally(() => {
-      loading.close()
-    })
-}
-
 const saveChange = () => {
   const loading = ElLoading.service({
     lock: true,
@@ -387,7 +302,7 @@ const saveChange = () => {
     background: 'rgba(0, 0, 0, 0.7)'
   })
   axios
-    .put<BiliResponse<BiliChat>>(URL.value + '/subs_config', bilichat.value, { timeout: 10000 })
+    .put<BiliResponse<BiliChat>>('api/subs_config', bilichat.value, { timeout: 10000 })
     .then((res) => {
       if (res.data.code !== 0) {
         ElMessage.error('未知错误')
@@ -447,7 +362,7 @@ const handleDelUser = (users: BiliChatUsers[], index: number) => {
   users.splice(index, 1)
 }
 const handleManageCookie = () => {
-  axios.get<BiliResponse<AuthInfo[]>>(URL.value + '/bili_grpc_auth').then((res) => {
+  axios.get<BiliResponse<AuthInfo[]>>('api/bili_grpc_auth').then((res) => {
     if (res.data.code !== 0) {
       ElMessage.error('未知错误')
       console.log(res)
@@ -459,20 +374,18 @@ const handleManageCookie = () => {
 }
 const handelDelCookie = (uid: number) => {
   console.log(uid)
-  axios
-    .delete<BiliResponse<AuthInfo[]>>(URL.value + '/bili_grpc_auth', { params: { uid } })
-    .then((res) => {
-      if (res.data.code !== 0) {
-        ElMessage.error('未知错误')
-        console.log(res)
-        return
-      }
-      ElMessage.success('删除成功')
-      handleManageCookie()
-    })
+  axios.delete<BiliResponse<AuthInfo[]>>('api/bili_grpc_auth', { params: { uid } }).then((res) => {
+    if (res.data.code !== 0) {
+      ElMessage.error('未知错误')
+      console.log(res)
+      return
+    }
+    ElMessage.success('删除成功')
+    handleManageCookie()
+  })
 }
 const handelAddCookie = () => {
-  axios.get<BiliResponse<Qrcode>>(URL.value + '/bili_grpc_login/qrcode').then((res) => {
+  axios.get<BiliResponse<Qrcode>>('api/bili_grpc_login/qrcode').then((res) => {
     console.log(res.data.data)
     qrcodeUrl.value = res.data.data.qrcode_url
     authCode.value = res.data.data.auth_code
@@ -486,7 +399,7 @@ const handelAddCookie = () => {
     timer.value = setInterval(() => {
       axios
         .post<BiliResponse<AuthInfo>>(
-          URL.value + '/bili_grpc_login/qrcode',
+          'api/bili_grpc_login/qrcode',
           {},
           { params: { auth_code: authCode.value } }
         )
