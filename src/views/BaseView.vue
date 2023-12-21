@@ -1,7 +1,7 @@
 <template>
   <ElContainer v-loading="isLoading" class="bg-gray-100 min-h-screen">
     <ElHeader class="flex items-center justify-between bg-blue-700 text-white p-4">
-      <span class="font-bold sm:text-lg">BILICHAT WEB UI</span>
+      <span class="font-bold sm:text-lg">BILICHAT WEB UI v{{ version }}</span>
       <div>
         <ElButton @click="handleManageCookie" color="rgb(59 130 246 / var(--un-bg-opacity))">
           管理cookie
@@ -230,6 +230,7 @@ import type {
 } from '@/types'
 import axios from 'axios'
 import QrcodeVue from 'qrcode.vue'
+import { version } from '../../package.json'
 
 const isManageCookieDialogVisible = ref(false)
 const isQrcodeDialogVisible = ref(false)
