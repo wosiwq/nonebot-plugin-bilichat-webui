@@ -1,10 +1,8 @@
-name: Build
+name: Build and Attach Artifacts to Release
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - '**/README.md'
+    tags:
+      - 'v*'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,3 +28,12 @@ jobs:
         with:
           name: dist
           path: dist
+
+      - name: Archive production artifacts
+        run: tar -czvf dist.tar.gz dist
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist.tar.gz
