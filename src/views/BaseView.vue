@@ -1,17 +1,29 @@
 <template>
-  <ElContainer v-loading="isLoading" class="bg-gray-100 min-h-screen">
-    <ElHeader class="flex items-center justify-between bg-blue-700 text-white p-4">
-      <span class="font-bold sm:text-lg">BILICHAT WEB UI v{{ version }}</span>
+  <ElContainer v-loading="isLoading" class="bg-gray-100 dark:bg-[#0d1117] min-h-screen">
+    <ElHeader
+      class="flex items-center justify-between bg-blue-700 dark:bg-[#010409] text-white p-4">
       <div>
-        <ElButton @click="handleManageCookie" color="rgb(59 130 246 / var(--un-bg-opacity))">
+        <span class="font-bold text-lg">BILICHAT</span>
+        <span class="font-bold hidden sm:inline text-lg">&nbsp;WEB UI v{{ version }}</span>
+      </div>
+
+      <div>
+        <ElButton @click="handleManageCookie" :color="getButtonColor()" :dark="isDark">
           管理cookie
         </ElButton>
+        <ElSwitch
+          class="ml-2"
+          v-model="isDark"
+          style="--el-switch-on-color: #2c2c2c"
+          width="55"
+          :active-action-icon="Dark"
+          :inactive-action-icon="Light"></ElSwitch>
       </div>
     </ElHeader>
     <ElMain class="h-full">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start h-full">
-        <div class="p-2 bg-white rounded-lg shadow">
-          <h2 class="text-lg font-bold mb-2 mt-2">配置文件</h2>
+        <ElCard style="border-radius: 0.5rem">
+          <h2 class="text-lg font-bold mb-2 mt-0">配置文件</h2>
           <Codemirror
             v-if="formattedBilichat"
             @blur="handleFormattedBilichatChange"
@@ -24,11 +36,11 @@
             :phrases="chinesePhrases"
             style="max-height: 600px"></Codemirror>
           <ElButton class="mt-2 mb-2" @click="saveChange">保存修改</ElButton>
-        </div>
+        </ElCard>
 
-        <div ref="formDiv" class="p-2 bg-white rounded-lg shadow">
+        <ElCard ref="formDiv" style="border-radius: 0.5rem">
           <ElScrollbar>
-            <h2 class="text-lg font-bold mt-2 mb-2">可视化修改</h2>
+            <h2 class="text-lg font-bold mt-0 mb-2">可视化修改</h2>
             <ElForm
               label-width="8rem"
               :model="bilichat"
@@ -170,7 +182,7 @@
             </ElForm>
             <span v-else>未读取到bilichat配置</span>
           </ElScrollbar>
-        </div>
+        </ElCard>
       </div>
     </ElMain>
   </ElContainer>
@@ -215,7 +227,7 @@
       append-to-body
       v-model="isQrcodeDialogVisible">
       <div class="flex justify-center">
-        <QrcodeVue :value="qrcodeUrl" :size="300"></QrcodeVue>
+        <QrcodeVue :value="qrcodeUrl" :size="300" :margin="2"></QrcodeVue>
       </div>
     </ElDialog>
   </ElDialog>
@@ -223,6 +235,8 @@
 <script lang="ts" setup>
 import Minus from '@/assets/Minus.vue'
 import Plus from '@/assets/Plus.vue'
+import Dark from '@/assets/dark.vue'
+import Light from '@/assets/light.vue'
 import type {
   AuthInfo,
   BiliChat,
@@ -234,6 +248,7 @@ import type {
 } from '@/types'
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
+import { useDark } from '@vueuse/core'
 import axios from 'axios'
 import QrcodeVue from 'qrcode.vue'
 import { Codemirror } from 'vue-codemirror'
@@ -243,6 +258,7 @@ const isManageCookieDialogVisible = ref(false)
 const isQrcodeDialogVisible = ref(false)
 const isPopoverVisible = ref(false)
 const isLoading = ref(false)
+const isDark = useDark({ disableTransition: false })
 
 const formDiv: Ref<HTMLElement | undefined> = ref()
 const inputUid = ref<number>()
@@ -491,7 +507,16 @@ const coverDataToLocalString = (ts: number) => {
 }
 
 const getExtensions = () => {
-  return [json(), oneDark]
+  if (isDark.value) {
+    return [json(), oneDark]
+  }
+  return [json()]
+}
+const getButtonColor = () => {
+  if (isDark.value) {
+    return 'rgb(25 50 100 / var(--un-bg-opacity))'
+  }
+  return 'rgb(59 130 246 / var(--un-bg-opacity))'
 }
 </script>
 <style scoped lang="scss"></style>
