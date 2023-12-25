@@ -26,7 +26,7 @@
           <h2 class="text-lg font-bold mb-2 mt-0">配置文件</h2>
           <Codemirror
             v-if="formattedBilichat"
-            @blur="handleFormattedBilichatChange"
+            @change="handleFormattedBilichatChange"
             v-model="formattedBilichat"
             placeholder="等待配置文件载入"
             :extensions="getExtensions()"
@@ -35,6 +35,7 @@
             :tab-size="2"
             :phrases="chinesePhrases"
             style="max-height: 600px"></Codemirror>
+          <div v-if="error" class="error">{{ error }}</div>
           <ElButton class="mt-2 mb-2" @click="saveChange">保存修改</ElButton>
         </ElCard>
 
@@ -248,7 +249,7 @@ import type {
 } from '@/types'
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { useDark } from '@vueuse/core'
+import { useDark, useDebounceFn } from '@vueuse/core'
 import axios from 'axios'
 import QrcodeVue from 'qrcode.vue'
 import { Codemirror } from 'vue-codemirror'
@@ -264,6 +265,7 @@ const formDiv: Ref<HTMLElement | undefined> = ref()
 const inputUid = ref<number>()
 const qrcodeUrl = ref()
 const authCode = ref()
+const error = ref()
 
 const timer = ref()
 const bilichat = ref<BiliChat>()
@@ -348,14 +350,17 @@ onMounted(() => {
     })
 })
 
-const handleFormattedBilichatChange = () => {
+const handleFormattedBilichatChange = useDebounceFn((val: string) => {
   try {
-    bilichat.value = JSON.parse(formattedBilichat.value as string) as BiliChat
+    bilichat.value = JSON.parse(val) as BiliChat
+    error.value = undefined
+    formattedBilichat.value = JSON.stringify(bilichat.value, null, 2)
   } catch (e) {
     ElMessage.error('JSON格式错误')
-    formattedBilichat.value = JSON.stringify(bilichat.value, null, 2)
+    error.value = 'JSON格式错误：' + e
+    // formattedBilichat.value = JSON.stringify(bilichat.value, null, 2)
   }
-}
+}, 1000)
 
 const saveChange = () => {
   const loading = ElLoading.service({
@@ -519,4 +524,31 @@ const getButtonColor = () => {
   return 'rgb(59 130 246 / var(--un-bg-opacity))'
 }
 </script>
-<style scoped lang="scss"></style>
+<style scoped lang="css">
+.error {
+  /* 文本样式 */
+  color: #721c24; /* 深红色，表示错误 */
+  background-color: #f8d7da; /* 浅红色背景 */
+  border-color: #f5c6cb; /* 边框颜色 */
+  font-size: 1em; /* 字体大小 */
+  font-weight: bold; /* 字体加粗 */
+  padding: 10px 15px; /* 内部填充 */
+  margin: 10px 0; /* 外部间距 */
+  border-radius: 5px; /* 边框圆角 */
+  border: 1px solid transparent; /* 边框样式 */
+
+  /* 布局与盒子模型 */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 轻微的阴影效果 */
+  text-align: center; /* 文本居中对齐 */
+
+  /* 动画效果 */
+  transition: all 0.3s ease-in-out; /* 平滑过渡效果 */
+}
+
+/* 当鼠标悬停在错误提示上时的样式 */
+.error:hover {
+  background-color: #f5c6cb; /* 鼠标悬停时的背景颜色变化 */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* 增加阴影 */
+  cursor: pointer; /* 鼠标样式变为手形 */
+}
+</style>
