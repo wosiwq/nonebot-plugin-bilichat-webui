@@ -12,13 +12,17 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start h-full">
         <div class="p-2 bg-white rounded-lg shadow">
           <h2 class="text-lg font-bold mb-2 mt-2">配置文件</h2>
-          <ElInput
-            class="mt-2"
-            @change="handleFormattedBilichatChange"
+          <Codemirror
+            v-if="formattedBilichat"
+            @blur="handleFormattedBilichatChange"
             v-model="formattedBilichat"
-            :rows="20"
-            type="textarea"
-            placeholder="等待读取数据中"></ElInput>
+            placeholder="等待配置文件载入"
+            :extensions="getExtensions()"
+            :autofocus="true"
+            :indent-with-tab="true"
+            :tab-size="2"
+            :phrases="chinesePhrases"
+            style="max-height: 600px"></Codemirror>
           <ElButton class="mt-2 mb-2" @click="saveChange">保存修改</ElButton>
         </div>
 
@@ -228,8 +232,11 @@ import type {
   PlatformOption,
   Qrcode
 } from '@/types'
+import { json } from '@codemirror/lang-json'
+import { oneDark } from '@codemirror/theme-one-dark'
 import axios from 'axios'
 import QrcodeVue from 'qrcode.vue'
+import { Codemirror } from 'vue-codemirror'
 import { version } from '../../package.json'
 
 const isManageCookieDialogVisible = ref(false)
@@ -248,6 +255,43 @@ const formattedBilichat = ref<string>()
 const authInfo = ref<AuthInfo[]>()
 
 const platformOption = ref<PlatformOption[]>()
+
+const chinesePhrases = {
+  // @codemirror/view
+  'Control character': '控制字符',
+  // @codemirror/commands
+  'Selection deleted': '选定删除',
+  // @codemirror/language
+  'Folded lines': '折叠块',
+  'Unfolded lines': '展开快',
+  to: '至',
+  'folded code': '折叠代码',
+  unfold: '展开',
+  'Fold line': '折叠',
+  'Unfold line': '展开',
+  // @codemirror/search
+  'Go to line': '转到行',
+  go: '去',
+  Find: '查找',
+  Replace: '替换为',
+  next: '下一个',
+  previous: '前一个',
+  all: '全部',
+  'match case': '区分大小写',
+  'by word': '全词匹配',
+  replace: '替换',
+  'replace all': '全部替换',
+  close: '关闭',
+  'current match': '当前匹配',
+  'replaced $ matches': '替换了 $ 个匹配',
+  'replaced match on line $': '在第 $ 行替换匹配',
+  'on line': '在行',
+  // @codemirror/autocomplete
+  Completions: '补全',
+  // @codemirror/lint
+  Diagnostics: '诊断',
+  'No diagnostics': '无诊断'
+}
 
 watch(
   () => bilichat.value,
@@ -288,9 +332,9 @@ onMounted(() => {
     })
 })
 
-const handleFormattedBilichatChange = (val: string) => {
+const handleFormattedBilichatChange = () => {
   try {
-    bilichat.value = JSON.parse(val) as BiliChat
+    bilichat.value = JSON.parse(formattedBilichat.value as string) as BiliChat
   } catch (e) {
     ElMessage.error('JSON格式错误')
     formattedBilichat.value = JSON.stringify(bilichat.value, null, 2)
@@ -444,6 +488,10 @@ const coverDataToLocalString = (ts: number) => {
     minute: '2-digit',
     second: '2-digit'
   })
+}
+
+const getExtensions = () => {
+  return [json(), oneDark]
 }
 </script>
 <style scoped lang="scss"></style>
